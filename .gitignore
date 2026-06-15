@@ -1,0 +1,30 @@
+## Ignore Visual Studio / VS Code / Build directories and files
+[Bb]in/
+[Oo]bj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Mono Auto Generated Files
+mono_crash.*
+
+# Target framework publish directories
+publish/
+
+# dotnet publish output
+bin/
+obj/

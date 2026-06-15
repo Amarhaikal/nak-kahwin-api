@@ -1,0 +1,6 @@
+@nak_kahwin_api_HostAddress = http://localhost:5114
+
+GET {{nak_kahwin_api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
