@@ -12,7 +12,7 @@ using nak_kahwin_api.Data;
 namespace nak_kahwin_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260618134600_AddPlanAndEvent")]
+    [Migration("20260618140642_AddPlanAndEvent")]
     partial class AddPlanAndEvent
     {
         /// <inheritdoc />
@@ -30,15 +30,10 @@ namespace nak_kahwin_api.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
-                    b.Property<string>("Date")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<DateOnly?>("Date")
+                        .HasColumnType("date");
 
                     b.Property<string>("PlanId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Time")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -47,7 +42,6 @@ namespace nak_kahwin_api.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Venue")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");

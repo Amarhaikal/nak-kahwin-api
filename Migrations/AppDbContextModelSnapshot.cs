@@ -27,15 +27,10 @@ namespace nak_kahwin_api.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
-                    b.Property<string>("Date")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<DateOnly?>("Date")
+                        .HasColumnType("date");
 
                     b.Property<string>("PlanId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Time")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -44,7 +39,6 @@ namespace nak_kahwin_api.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Venue")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");

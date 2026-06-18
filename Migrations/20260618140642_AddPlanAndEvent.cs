@@ -46,9 +46,8 @@ namespace nak_kahwin_api.Migrations
                     Id = table.Column<string>(type: "text", nullable: false),
                     PlanId = table.Column<string>(type: "text", nullable: false),
                     Type = table.Column<string>(type: "text", nullable: false),
-                    Venue = table.Column<string>(type: "text", nullable: false),
-                    Date = table.Column<string>(type: "text", nullable: false),
-                    Time = table.Column<string>(type: "text", nullable: false)
+                    Venue = table.Column<string>(type: "text", nullable: true),
+                    Date = table.Column<DateOnly>(type: "date", nullable: true)
                 },
                 constraints: table =>
                 {
