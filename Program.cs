@@ -16,6 +16,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // ── Auth Services ─────────────────────────────────────────
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPlanService, PlanService>();
 
 // ── JWT Authentication ────────────────────────────────────
 builder.Services
