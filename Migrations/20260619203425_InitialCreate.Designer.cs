@@ -12,8 +12,8 @@ using nak_kahwin_api.Data;
 namespace nak_kahwin_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260615145701_AddRefreshTokens")]
-    partial class AddRefreshTokens
+    [Migration("20260619203425_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,52 @@ namespace nak_kahwin_api.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("nak_kahwin_api.Models.Event", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("EngagementDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("EngagementVenue")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsEngagementEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateOnly?>("MarriageDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("MarriageVenue")
+                        .HasColumnType("text");
+
+                    b.Property<string>("OwnerId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PartnerId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerId");
+
+                    b.HasIndex("PartnerId");
+
+                    b.ToTable("Events");
+                });
 
             modelBuilder.Entity("nak_kahwin_api.Models.RefreshToken", b =>
                 {
@@ -87,6 +133,24 @@ namespace nak_kahwin_api.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("nak_kahwin_api.Models.Event", b =>
+                {
+                    b.HasOne("nak_kahwin_api.Models.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("nak_kahwin_api.Models.User", "Partner")
+                        .WithMany()
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Owner");
+
+                    b.Navigation("Partner");
                 });
 
             modelBuilder.Entity("nak_kahwin_api.Models.RefreshToken", b =>

@@ -7,12 +7,12 @@
 
 ## Overview
 
-The app revolves around a **Plan** — a shared wedding/engagement budget workspace owned by a **couple** (2 users). Each plan has up to **2 Events**:
+The app revolves around an **Event** workspace — a shared wedding/engagement budget workspace owned by a **couple** (2 users). The event contains details for both the:
 
 - `marriage` — Nikah (**required**)
 - `engagement` — Tunang (**optional**, toggled by the couple)
 
-Both partners can **read and write** to the same plan via an invite code system.
+Both partners can **read and write** to the same event workspace.
 
 ---
 
@@ -32,31 +32,21 @@ Both partners can **read and write** to the same plan via an invite code system.
 
 ---
 
-### `Plan`
-
-| Field                 | Type       | Notes                             |
-| --------------------- | ---------- | --------------------------------- |
-| `Id`                  | `string`   | GUID                              |
-| `Title`               | `string`   | e.g. `"Amar & Aishah's Wedding"`  |
-| `OwnerId`             | `string`   | FK → User (who created the plan)  |
-| `PartnerId`           | `string?`  | FK → User (invited partner)       |
-| `InviteCode`          | `string`   | Random short code e.g. `NAK-4X72` |
-| `IsEngagementEnabled` | `bool`     | Partner can toggle on/off         |
-| `CreatedAt`           | `DateTime` |                                   |
-| `UpdatedAt`           | `DateTime` |                                   |
-
----
-
 ### `Event`
 
-| Field    | Type     | Notes                          |
-| -------- | -------- | ------------------------------ |
-| `Id`     | `string` | GUID                           |
-| `PlanId` | `string` | FK → Plan                      |
-| `Type`   | `string` | `"marriage"` \| `"engagement"` |
-| `Venue`  | `string` |                                |
-| `Date`   | `string` | ISO date `"2026-12-13"`        |
-| `Time`   | `string` | `"10:00 AM"`                   |
+| Field                 | Type       | Notes                                      |
+| --------------------- | ---------- | ------------------------------------------ |
+| `Id`                  | `string`   | GUID                                       |
+| `OwnerId`             | `string`   | FK → User (who created the event workspace)|
+| `PartnerId`           | `string?`  | FK → User (invited partner)                |
+| `Title`               | `string`   | e.g. `"Amar & Aishah's Wedding"`           |
+| `IsEngagementEnabled` | `bool`     | Partner can toggle on/off                  |
+| `MarriageVenue`       | `string?`  | Venue of the marriage (Nikah)              |
+| `MarriageDate`        | `DateOnly?`| Date of the marriage (Nikah)               |
+| `EngagementVenue`     | `string?`  | Venue of the engagement (Tunang)           |
+| `EngagementDate`      | `DateOnly?`| Date of the engagement (Tunang)            |
+| `CreatedAt`           | `DateTime` |                                            |
+| `UpdatedAt`           | `DateTime` |                                            |
 
 ---
 
@@ -65,7 +55,7 @@ Both partners can **read and write** to the same plan via an invite code system.
 | Field        | Type      | Notes                          |
 | ------------ | --------- | ------------------------------ |
 | `Id`         | `string`  | GUID                           |
-| `PlanId`     | `string`  | FK → Plan                      |
+| `EventId`    | `string`  | FK → Event                     |
 | `EventType`  | `string`  | `"marriage"` \| `"engagement"` |
 | `TotalLimit` | `decimal` | Overall budget cap             |
 
@@ -89,7 +79,7 @@ Both partners can **read and write** to the same plan via an invite code system.
 | Field       | Type       | Notes              |
 | ----------- | ---------- | ------------------ |
 | `Id`        | `string`   | GUID               |
-| `PlanId`    | `string`   | FK → Plan          |
+| `EventId`   | `string`   | FK → Event         |
 | `Month`     | `string`   | e.g. `"July 2026"` |
 | `Amount`    | `decimal`  |                    |
 | `By`        | `string`   | `"him"` \| `"her"` |
@@ -102,7 +92,7 @@ Both partners can **read and write** to the same plan via an invite code system.
 | Field       | Type     | Notes                                        |
 | ----------- | -------- | -------------------------------------------- |
 | `Id`        | `string` | GUID                                         |
-| `PlanId`    | `string` | FK → Plan                                    |
+| `EventId`   | `string` | FK → Event                                   |
 | `EventType` | `string` | `"marriage"` \| `"engagement"` \| `"shared"` |
 | `Title`     | `string` |                                              |
 | `Icon`      | `string` | SF Symbol name                               |
@@ -147,65 +137,47 @@ Both partners can **read and write** to the same plan via an invite code system.
 
 ---
 
-### Plan — `/api/plans`
+### Events — `/api/events`
 
-> A user can only be part of **one active plan** at a time.
+> A user can only be part of **one active event workspace** at a time.
 
-| Method   | Path                          | Description                           |
-| -------- | ----------------------------- | ------------------------------------- |
-| `POST`   | `/api/plans`                  | Create a new plan                     |
-| `GET`    | `/api/plans/me`               | Get current user's plan               |
-| `PATCH`  | `/api/plans/{id}`             | Update plan title / engagement toggle |
-| `DELETE` | `/api/plans/{id}`             | Delete plan (owner only)              |
-| `GET`    | `/api/plans/{id}/invite-code` | Get shareable invite code             |
-| `POST`   | `/api/plans/join`             | Partner joins via invite code         |
+| Method   | Path                          | Description                                        |
+| -------- | ----------------------------- | -------------------------------------------------- |
+| `POST`   | `/api/events`                 | Create a new event workspace                       |
+| `GET`    | `/api/events/me`              | Get current user's active event workspace          |
+| `PATCH`  | `/api/events/{id}`            | Update general event details (title, engagement)   |
+| `PUT`    | `/api/events/{id}/marriage`   | Update marriage details (venue, date)              |
+| `PUT`    | `/api/events/{id}/engagement` | Update engagement details (venue, date)            |
 
-**Create Plan — Request Body**
+**Create Event Workspace — Request Body**
 
 ```json
 {
-  "title": "Amar & Aishah's Nikah 2026",
-  "isEngagementEnabled": true
+  "title": "Amar & Aishah's Wedding",
+  "isEngagementEnabled": true,
+  "marriageDate": "2026-12-13",
+  "engagementDate": "2026-06-15"
 }
 ```
 
-**Join Plan — Request Body**
-
-```json
-{ "inviteCode": "NAK-4X72" }
-```
-
----
-
-### Events — `/api/plans/{planId}/events`
-
-| Method | Path                                | Description                            |
-| ------ | ----------------------------------- | -------------------------------------- |
-| `GET`  | `/api/plans/{planId}/events`        | Get all events (marriage + engagement) |
-| `GET`  | `/api/plans/{planId}/events/{type}` | Get a specific event by type           |
-| `PUT`  | `/api/plans/{planId}/events/{type}` | Upsert event details                   |
-
-> `{type}` is `marriage` or `engagement`
-
-**Upsert Event — Request Body**
+**Update Marriage Details — Request Body**
 
 ```json
 {
   "venue": "Dewan Sri Murni, Seremban",
-  "date": "2026-12-13",
-  "time": "10:00 AM"
+  "date": "2026-12-13"
 }
 ```
 
 ---
 
-### Budget — `/api/plans/{planId}/budget`
+### Budget — `/api/events/{eventId}/budget`
 
-| Method  | Path                                                      | Description                         |
-| ------- | --------------------------------------------------------- | ----------------------------------- |
-| `GET`   | `/api/plans/{planId}/budget/{eventType}`                  | Get full budget (all categories)    |
-| `PATCH` | `/api/plans/{planId}/budget/{eventType}/limit`            | Update total budget limit           |
-| `PUT`   | `/api/plans/{planId}/budget/{eventType}/categories/{key}` | Update a category's allocated/spent |
+| Method  | Path                                                        | Description                         |
+| ------- | ----------------------------------------------------------- | ----------------------------------- |
+| `GET`   | `/api/events/{eventId}/budget/{eventType}`                  | Get full budget (all categories)    |
+| `PATCH` | `/api/events/{eventId}/budget/{eventType}/limit`            | Update total budget limit           |
+| `PUT`   | `/api/events/{eventId}/budget/{eventType}/categories/{key}` | Update a category's allocated/spent |
 
 > `{eventType}` is `marriage` or `engagement`  
 > `{key}` is one of `place`, `catering`, `clothes`, `ring`, `others`
@@ -268,13 +240,13 @@ Both partners can **read and write** to the same plan via an invite code system.
 
 ---
 
-### Savings — `/api/plans/{planId}/savings`
+### Savings — `/api/events/{eventId}/savings`
 
-| Method   | Path                               | Description             |
-| -------- | ---------------------------------- | ----------------------- |
-| `GET`    | `/api/plans/{planId}/savings`      | Get all saving entries  |
-| `POST`   | `/api/plans/{planId}/savings`      | Add a new saving entry  |
-| `DELETE` | `/api/plans/{planId}/savings/{id}` | Delete own saving entry |
+| Method   | Path                                 | Description             |
+| -------- | ------------------------------------ | ----------------------- |
+| `GET`    | `/api/events/{eventId}/savings`      | Get all saving entries  |
+| `POST`   | `/api/events/{eventId}/savings`      | Add a new saving entry  |
+| `DELETE` | `/api/events/{eventId}/savings/{id}` | Delete own saving entry |
 
 > **Rule**: A user can only delete saving entries they created (`by` matches their role).  
 > The `by` field is **set by the server** from the authenticated user's role — never trusted from client input.
@@ -311,16 +283,16 @@ Both partners can **read and write** to the same plan via an invite code system.
 
 ---
 
-### Checklist — `/api/plans/{planId}/checklist`
+### Checklist — `/api/events/{eventId}/checklist`
 
-| Method   | Path                                                     | Description                  |
-| -------- | -------------------------------------------------------- | ---------------------------- |
-| `GET`    | `/api/plans/{planId}/checklist`                          | Get all categories + tasks   |
-| `POST`   | `/api/plans/{planId}/checklist/categories`               | Add a new category           |
-| `DELETE` | `/api/plans/{planId}/checklist/categories/{catId}`       | Delete a category            |
-| `POST`   | `/api/plans/{planId}/checklist/categories/{catId}/tasks` | Add a task to a category     |
-| `PATCH`  | `/api/plans/{planId}/checklist/tasks/{taskId}/toggle`    | Toggle task complete/pending |
-| `DELETE` | `/api/plans/{planId}/checklist/tasks/{taskId}`           | Delete a task                |
+| Method   | Path                                                       | Description                  |
+| -------- | ---------------------------------------------------------- | ---------------------------- |
+| `GET`    | `/api/events/{eventId}/checklist`                          | Get all categories + tasks   |
+| `POST`   | `/api/events/{eventId}/checklist/categories`               | Add a new category           |
+| `DELETE` | `/api/events/{eventId}/checklist/categories/{catId}`       | Delete a category            |
+| `POST`   | `/api/events/{eventId}/checklist/categories/{catId}/tasks` | Add a task to a category     |
+| `PATCH`  | `/api/events/{eventId}/checklist/tasks/{taskId}/toggle`    | Toggle task complete/pending |
+| `DELETE` | `/api/events/{eventId}/checklist/tasks/{taskId}`           | Delete a task                |
 
 ---
 
@@ -347,7 +319,6 @@ nak-kahwin-api/
 │
 ├── Models/                     ← EF Core entities
 │   ├── User.cs
-│   ├── Plan.cs
 │   ├── Event.cs
 │   ├── Budget.cs
 │   ├── BudgetCategory.cs
@@ -357,7 +328,6 @@ nak-kahwin-api/
 │
 ├── DTOs/                       ← Request & response shapes
 │   ├── Auth/
-│   ├── Plan/
 │   ├── Event/
 │   ├── Budget/
 │   ├── Savings/
@@ -365,8 +335,7 @@ nak-kahwin-api/
 │
 ├── Controllers/                ← MVC API Controllers
 │   ├── AuthController.cs
-│   ├── PlansController.cs
-│   ├── EventsController.cs
+│   ├── EventController.cs
 │   ├── BudgetController.cs
 │   ├── SavingsController.cs
 │   ├── ChecklistController.cs
@@ -374,7 +343,7 @@ nak-kahwin-api/
 │
 ├── Services/                   ← Business logic layer
 │   ├── AuthService.cs
-│   ├── PlanService.cs
+│   ├── EventService.cs
 │   ├── BudgetService.cs
 │   └── ChecklistService.cs
 │
@@ -386,15 +355,14 @@ nak-kahwin-api/
 
 ## Key Design Decisions
 
-| Decision                                        | Rationale                                                                                                |
-| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| **Plan-scoped resources**                       | Budget, savings, checklist all live under `/plans/{planId}/...` — clean hierarchy and easy authorization |
-| **`eventType` as path param**                   | Mirrors the app's marriage/engagement switcher — each event has its own isolated budget                  |
-| **`by` derived from JWT on server**             | Prevents client spoofing; role is trusted from the authenticated token only                              |
-| **Invite code for partner sharing**             | Simple mobile-friendly flow — no email required to link two accounts                                     |
-| **Upsert (`PUT`) for Events**                   | Events are singletons per plan type — upsert is cleaner than separate create + update                    |
-| **Separate `Budget` + `BudgetCategory` tables** | Allows per-category granularity and future custom categories                                             |
-| **`isEngagementEnabled` on Plan**               | Engagement is optional — single flag controls visibility across API and UI                               |
+| Decision                                        | Rationale                                                                                                  |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Event-scoped resources**                      | Budget, savings, checklist all live under `/events/{eventId}/...` — clean hierarchy and easy authorization  |
+| **`eventType` as path param**                   | Mirrors the app's marriage/engagement switcher — each event type has its own isolated budget               |
+| **`by` derived from JWT on server**             | Prevents client spoofing; role is trusted from the authenticated token only                                |
+| **Invite code for partner sharing**             | Simple mobile-friendly flow — no email required to link two accounts                                       |
+| **Separate `Budget` + `BudgetCategory` tables** | Allows per-category granularity and future custom categories                                               |
+| **`isEngagementEnabled` on Event**              | Engagement is optional — single flag controls visibility across API and UI                                 |
 
 ---
 

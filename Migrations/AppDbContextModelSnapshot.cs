@@ -27,37 +27,23 @@ namespace nak_kahwin_api.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
-                    b.Property<DateOnly?>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<string>("PlanId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Venue")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PlanId");
-
-                    b.ToTable("Events");
-                });
-
-            modelBuilder.Entity("nak_kahwin_api.Models.Plan", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateOnly?>("EngagementDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("EngagementVenue")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsEngagementEnabled")
                         .HasColumnType("boolean");
+
+                    b.Property<DateOnly?>("MarriageDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("MarriageVenue")
+                        .HasColumnType("text");
 
                     b.Property<string>("OwnerId")
                         .IsRequired()
@@ -79,7 +65,7 @@ namespace nak_kahwin_api.Migrations
 
                     b.HasIndex("PartnerId");
 
-                    b.ToTable("Plans");
+                    b.ToTable("Events");
                 });
 
             modelBuilder.Entity("nak_kahwin_api.Models.RefreshToken", b =>
@@ -148,17 +134,6 @@ namespace nak_kahwin_api.Migrations
 
             modelBuilder.Entity("nak_kahwin_api.Models.Event", b =>
                 {
-                    b.HasOne("nak_kahwin_api.Models.Plan", "Plan")
-                        .WithMany()
-                        .HasForeignKey("PlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Plan");
-                });
-
-            modelBuilder.Entity("nak_kahwin_api.Models.Plan", b =>
-                {
                     b.HasOne("nak_kahwin_api.Models.User", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerId")
@@ -167,7 +142,8 @@ namespace nak_kahwin_api.Migrations
 
                     b.HasOne("nak_kahwin_api.Models.User", "Partner")
                         .WithMany()
-                        .HasForeignKey("PartnerId");
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Owner");
 

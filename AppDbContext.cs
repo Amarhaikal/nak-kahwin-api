@@ -7,7 +7,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 {
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
-    public DbSet<Plan> Plans => Set<Plan>();
     public DbSet<Event> Events => Set<Event>();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -26,6 +25,19 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
               .WithMany()
               .HasForeignKey(x => x.UserId)
               .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Event>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasOne(x => x.Owner)
+              .WithMany()
+              .HasForeignKey(x => x.OwnerId)
+              .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Partner)
+              .WithMany()
+              .HasForeignKey(x => x.PartnerId)
+              .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }
