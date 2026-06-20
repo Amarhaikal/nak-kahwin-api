@@ -76,84 +76,26 @@ public class EventService(AppDbContext db) : IEventService
         if (req.IsEngagementEnabled.HasValue)
         {
             ev.IsEngagementEnabled = req.IsEngagementEnabled.Value;
-            if (!ev.IsEngagementEnabled)
-            {
-                // Clear engagement details if engagement is disabled
-                ev.EngagementVenue = null;
-                ev.EngagementDate = null;
-            }
         }
 
-        ev.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync();
-
-        return new EventDetailsResponse(
-            Id: ev.Id,
-            Title: ev.Title,
-            IsEngagementEnabled: ev.IsEngagementEnabled,
-            OwnerName: ev.Owner.Name,
-            PartnerName: ev.Partner?.Name,
-            MarriageVenue: ev.MarriageVenue,
-            MarriageDate: ev.MarriageDate,
-            EngagementVenue: ev.EngagementVenue,
-            EngagementDate: ev.EngagementDate
-        );
-    }
-
-    public async Task<EventDetailsResponse?> UpdateMarriageEventAsync(string id, UpdateEventMarriageRequest req)
-    {
-        var ev = await db.Events
-            .Include(e => e.Owner)
-            .Include(e => e.Partner)
-            .FirstOrDefaultAsync(e => e.Id == id);
-
-        if (ev is null) return null;
-
-        if (req.Venue is not null)
+        if (req.MarriageVenue is not null)
         {
-            ev.MarriageVenue = req.Venue;
+            ev.MarriageVenue = req.MarriageVenue;
         }
 
-        if (req.Date.HasValue)
+        if (req.MarriageDate.HasValue)
         {
-            ev.MarriageDate = req.Date.Value;
+            ev.MarriageDate = req.MarriageDate.Value;
         }
 
-        ev.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync();
-
-        return new EventDetailsResponse(
-            Id: ev.Id,
-            Title: ev.Title,
-            IsEngagementEnabled: ev.IsEngagementEnabled,
-            OwnerName: ev.Owner.Name,
-            PartnerName: ev.Partner?.Name,
-            MarriageVenue: ev.MarriageVenue,
-            MarriageDate: ev.MarriageDate,
-            EngagementVenue: ev.EngagementVenue,
-            EngagementDate: ev.EngagementDate
-        );
-    }
-
-    public async Task<EventDetailsResponse?> UpdateEngagementEventAsync(string id, UpdateEventEngagementRequest req)
-    {
-        var ev = await db.Events
-            .Include(e => e.Owner)
-            .Include(e => e.Partner)
-            .FirstOrDefaultAsync(e => e.Id == id);
-
-        if (ev is null) return null;
-
-        if (!ev.IsEngagementEnabled) return null; // Can't update engagement details if disabled
-
-        if (req.Venue is not null)
+        if (req.EngagementVenue is not null)
         {
-            ev.EngagementVenue = req.Venue;
+            ev.EngagementVenue = req.EngagementVenue;
         }
 
-        if (req.Date.HasValue)
+        if (req.EngagementDate.HasValue)
         {
-            ev.EngagementDate = req.Date.Value;
+            ev.EngagementDate = req.EngagementDate.Value;
         }
 
         ev.UpdatedAt = DateTime.UtcNow;

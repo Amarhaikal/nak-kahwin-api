@@ -145,9 +145,7 @@ Both partners can **read and write** to the same event workspace.
 | -------- | ----------------------------- | -------------------------------------------------- |
 | `POST`   | `/api/events`                 | Create a new event workspace                       |
 | `GET`    | `/api/events/me`              | Get current user's active event workspace          |
-| `PATCH`  | `/api/events/{id}`            | Update general event details (title, engagement)   |
-| `PUT`    | `/api/events/{id}/marriage`   | Update marriage details (venue, date)              |
-| `PUT`    | `/api/events/{id}/engagement` | Update engagement details (venue, date)            |
+| `PUT`    | `/api/events/{id}`            | Update event workspace details (general & dates)   |
 
 **Create Event Workspace — Request Body**
 
@@ -160,12 +158,16 @@ Both partners can **read and write** to the same event workspace.
 }
 ```
 
-**Update Marriage Details — Request Body**
+**Update Event Workspace — Request Body**
 
 ```json
 {
-  "venue": "Dewan Sri Murni, Seremban",
-  "date": "2026-12-13"
+  "title": "Amar & Aishah's Beautiful Wedding",
+  "isEngagementEnabled": true,
+  "marriageVenue": "Dewan Sri Murni, Seremban",
+  "marriageDate": "2026-12-13",
+  "engagementVenue": "Syamimie's Family Residence",
+  "engagementDate": "2026-06-15"
 }
 ```
 

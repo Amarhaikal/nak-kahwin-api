@@ -45,7 +45,7 @@ public class EventController(IEventService eventService) : ControllerBase
         return Ok(result);
     }
 
-    [HttpPatch("{id}")]
+    [HttpPut("{id}")]
     public async Task<IActionResult> UpdateEvent(string id, [FromBody] UpdateEventRequest req)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -58,40 +58,6 @@ public class EventController(IEventService eventService) : ControllerBase
         if (result is null)
         {
             return BadRequest(new { message = "Failed to update event workspace details." });
-        }
-        return Ok(result);
-    }
-
-    [HttpPut("{id}/marriage")]
-    public async Task<IActionResult> UpdateMarriageEvent(string id, [FromBody] UpdateEventMarriageRequest req)
-    {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId))
-        {
-            return Unauthorized(new { message = "User not logged in or invalid token." });
-        }
-
-        var result = await eventService.UpdateMarriageEventAsync(id, req);
-        if (result is null)
-        {
-            return BadRequest(new { message = "Failed to update marriage event details." });
-        }
-        return Ok(result);
-    }
-
-    [HttpPut("{id}/engagement")]
-    public async Task<IActionResult> UpdateEngagementEvent(string id, [FromBody] UpdateEventEngagementRequest req)
-    {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId))
-        {
-            return Unauthorized(new { message = "User not logged in or invalid token." });
-        }
-
-        var result = await eventService.UpdateEngagementEventAsync(id, req);
-        if (result is null)
-        {
-            return BadRequest(new { message = "Failed to update engagement event details or engagement is disabled." });
         }
         return Ok(result);
     }
