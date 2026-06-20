@@ -28,3 +28,6 @@ publish/
 # dotnet publish output
 bin/
 obj/
+
+# User Uploads
+wwwroot/uploads/

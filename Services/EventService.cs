@@ -33,11 +33,13 @@ public class EventService(AppDbContext db) : IEventService
             MarriageVenue: ev.MarriageVenue,
             MarriageDate: ev.MarriageDate,
             EngagementVenue: ev.EngagementVenue,
-            EngagementDate: ev.EngagementDate
+            EngagementDate: ev.EngagementDate,
+            MarriageImageUrl: null,
+            EngagementImageUrl: null
         );
     }
 
-    public async Task<EventDetailsResponse?> GetEventForUserAsync(string userId)
+    public async Task<EventDetailsResponse?> GetEventForUserAsync(string userId, string baseSchemeAndHost)
     {
         var ev = await db.Events
             .Include(e => e.Owner)
@@ -46,20 +48,10 @@ public class EventService(AppDbContext db) : IEventService
 
         if (ev is null) return null;
 
-        return new EventDetailsResponse(
-            Id: ev.Id,
-            Title: ev.Title,
-            IsEngagementEnabled: ev.IsEngagementEnabled,
-            OwnerName: ev.Owner.Name,
-            PartnerName: ev.Partner?.Name,
-            MarriageVenue: ev.MarriageVenue,
-            MarriageDate: ev.MarriageDate,
-            EngagementVenue: ev.EngagementVenue,
-            EngagementDate: ev.EngagementDate
-        );
+        return MapToResponse(ev, ev.Owner.Name, ev.Partner?.Name, baseSchemeAndHost);
     }
 
-    public async Task<EventDetailsResponse?> UpdateEventAsync(string id, UpdateEventRequest req)
+    public async Task<EventDetailsResponse?> UpdateEventAsync(string id, UpdateEventRequest req, string baseSchemeAndHost)
     {
         var ev = await db.Events
             .Include(e => e.Owner)
@@ -101,16 +93,92 @@ public class EventService(AppDbContext db) : IEventService
         ev.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
 
+        return MapToResponse(ev, ev.Owner.Name, ev.Partner?.Name, baseSchemeAndHost);
+    }
+
+    public async Task<EventDetailsResponse?> SaveEventImageAsync(string id, string eventType, Microsoft.AspNetCore.Http.IFormFile file, string baseSchemeAndHost)
+    {
+        var ev = await db.Events
+            .Include(e => e.Owner)
+            .Include(e => e.Partner)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (ev is null) return null;
+
+        // Determine destination folder
+        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "events");
+        if (!Directory.Exists(uploadsFolder))
+        {
+            Directory.CreateDirectory(uploadsFolder);
+        }
+
+        // Handle deleting the old image if it exists
+        var oldImageName = eventType == "marriage" ? ev.MarriageImageUrl : ev.EngagementImageUrl;
+        if (!string.IsNullOrEmpty(oldImageName))
+        {
+            var oldImagePath = Path.Combine(uploadsFolder, oldImageName);
+            if (File.Exists(oldImagePath))
+            {
+                try
+                {
+                    File.Delete(oldImagePath);
+                }
+                catch
+                {
+                    // Ignore
+                }
+            }
+        }
+
+        // Generate unique filename
+        var ext = Path.GetExtension(file.FileName).ToLower();
+        var fileName = $"{Guid.NewGuid()}{ext}";
+        var filePath = Path.Combine(uploadsFolder, fileName);
+
+        // Save file
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        // Update database
+        if (eventType == "marriage")
+        {
+            ev.MarriageImageUrl = fileName;
+        }
+        else
+        {
+            ev.EngagementImageUrl = fileName;
+        }
+
+        ev.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        return MapToResponse(ev, ev.Owner.Name, ev.Partner?.Name, baseSchemeAndHost);
+    }
+
+    private static EventDetailsResponse MapToResponse(Event ev, string ownerName, string? partnerName, string baseSchemeAndHost)
+    {
+        var marriageUrl = string.IsNullOrEmpty(ev.MarriageImageUrl) 
+            ? null 
+            : $"{baseSchemeAndHost}/uploads/events/{ev.MarriageImageUrl}";
+            
+        var engagementUrl = string.IsNullOrEmpty(ev.EngagementImageUrl) 
+            ? null 
+            : $"{baseSchemeAndHost}/uploads/events/{ev.EngagementImageUrl}";
+
         return new EventDetailsResponse(
             Id: ev.Id,
             Title: ev.Title,
             IsEngagementEnabled: ev.IsEngagementEnabled,
-            OwnerName: ev.Owner.Name,
-            PartnerName: ev.Partner?.Name,
+            OwnerName: ownerName,
+            PartnerName: partnerName,
             MarriageVenue: ev.MarriageVenue,
             MarriageDate: ev.MarriageDate,
             EngagementVenue: ev.EngagementVenue,
-            EngagementDate: ev.EngagementDate
+            EngagementDate: ev.EngagementDate,
+            MarriageImageUrl: marriageUrl,
+            EngagementImageUrl: engagementUrl
         );
     }
 }

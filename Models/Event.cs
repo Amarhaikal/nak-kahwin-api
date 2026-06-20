@@ -13,8 +13,10 @@ public class Event
     public Boolean IsEngagementEnabled { get; set; } = false;
     public string? MarriageVenue { get; set; }
     public DateOnly? MarriageDate { get; set; }
+    public string? MarriageImageUrl { get; set; }
     public string? EngagementVenue { get; set; }
     public DateOnly? EngagementDate { get; set; }
+    public string? EngagementImageUrl { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

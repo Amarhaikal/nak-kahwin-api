@@ -9,5 +9,7 @@ public record EventDetailsResponse(
     string? MarriageVenue,
     DateOnly? MarriageDate,
     string? EngagementVenue,
-    DateOnly? EngagementDate
+    DateOnly? EngagementDate,
+    string? MarriageImageUrl,
+    string? EngagementImageUrl
 );

@@ -39,6 +39,14 @@ builder.Services
 builder.Services.AddAuthorization();
 builder.Services.AddOpenApi();
 
+// Ensure wwwroot directory exists and is set as WebRootPath
+var webRoot = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
+if (!Directory.Exists(webRoot))
+{
+    Directory.CreateDirectory(webRoot);
+}
+builder.Environment.WebRootPath = webRoot;
+
 // ── CORS (allow Expo dev client) ──────────────────────────
 builder.Services.AddCors(options =>
 {
@@ -53,6 +61,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
 app.UseCors("AllowAll");
+app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
