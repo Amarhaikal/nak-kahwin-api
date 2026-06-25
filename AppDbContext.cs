@@ -8,6 +8,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Event> Events => Set<Event>();
+    public DbSet<ChecklistGroup> ChecklistGroups => Set<ChecklistGroup>();
+    public DbSet<ChecklistItem> ChecklistItems => Set<ChecklistItem>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -38,6 +40,26 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
               .WithMany()
               .HasForeignKey(x => x.PartnerId)
               .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<ChecklistGroup>(cg =>
+        {
+            cg.HasKey(x => x.Id);
+            cg.HasOne(cg => cg.Event)
+              .WithMany()
+              .HasForeignKey(x => x.EventId)
+              .OnDelete(DeleteBehavior.Cascade);
+            cg.HasIndex(x => new { x.EventId, x.Order });
+        });
+
+        builder.Entity<ChecklistItem>(ci =>
+        {
+            ci.HasKey(x => x.Id);
+            ci.HasOne(ci => ci.Group)
+              .WithMany(g => g.Items)
+              .HasForeignKey(x => x.GroupId)
+              .OnDelete(DeleteBehavior.Cascade);
+            ci.HasIndex(x => new { x.GroupId, x.Order });
         });
     }
 }

@@ -5,7 +5,7 @@ using nak_kahwin_api.Models;
 
 namespace nak_kahwin_api.Services;
 
-public class EventService(AppDbContext db) : IEventService
+public class EventService(AppDbContext db, IChecklistService checklistService) : IEventService
 {
     public async Task<EventDetailsResponse?> CreateEventAsync(CreateEventRequest req, string ownerId)
     {
@@ -23,6 +23,9 @@ public class EventService(AppDbContext db) : IEventService
 
         db.Events.Add(ev);
         await db.SaveChangesAsync();
+
+        // Seed default checklist for the newly created event
+        await checklistService.SeedDefaultChecklistAsync(ev.Id);
 
         return new EventDetailsResponse(
             Id: ev.Id,
