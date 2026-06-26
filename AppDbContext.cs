@@ -10,6 +10,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Event> Events => Set<Event>();
     public DbSet<ChecklistGroup> ChecklistGroups => Set<ChecklistGroup>();
     public DbSet<ChecklistItem> ChecklistItems => Set<ChecklistItem>();
+    public DbSet<SavingsGoal> SavingsGoals => Set<SavingsGoal>();
+    public DbSet<SavingsContribution> SavingsContributions => Set<SavingsContribution>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -60,6 +62,28 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
               .HasForeignKey(x => x.GroupId)
               .OnDelete(DeleteBehavior.Cascade);
             ci.HasIndex(x => new { x.GroupId, x.Order });
+        });
+
+        builder.Entity<SavingsGoal>(sg =>
+        {
+            sg.HasKey(x => x.Id);
+            sg.HasOne(sg => sg.Event)
+              .WithMany()
+              .HasForeignKey(x => x.EventId)
+              .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<SavingsContribution>(sc =>
+        {
+            sc.HasKey(x => x.Id);
+            sc.HasOne(sc => sc.SavingsGoal)
+              .WithMany(g => g.Contributions)
+              .HasForeignKey(x => x.GoalId)
+              .OnDelete(DeleteBehavior.Cascade);
+            sc.HasOne(sc => sc.Contributor)
+              .WithMany()
+              .HasForeignKey(x => x.ContributorId)
+              .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
