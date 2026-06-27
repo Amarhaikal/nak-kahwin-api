@@ -1,36 +1,17 @@
 namespace nak_kahwin_api.DTOs.Savings;
 
-public record SavingsContributionResponse(
-    string Id,
-    string GoalId,
-    string ContributorId,
-    string ContributorName,
-    string ContributorRole, // "groom" | "bride"
-    decimal Amount,
-    DateTime ContributedAt
-);
-
-public record SavingsGoalResponse(
+public record SavingEntryResponse(
     string Id,
     string EventId,
-    string Title,
-    decimal TargetAmount,
-    decimal CurrentAmount,
-    DateTime CreatedAt,
-    DateTime UpdatedAt,
-    List<SavingsContributionResponse> Contributions
+    string UserId,
+    string ContributorName,
+    string ContributorRole, // "groom" | "bride"
+    string Month,
+    decimal Amount,
+    DateTime CreatedAt
 );
 
-public record CreateSavingsGoalRequest(
-    string Title,
-    decimal TargetAmount
-);
-
-public record UpdateSavingsGoalRequest(
-    string Title,
-    decimal TargetAmount
-);
-
-public record CreateContributionRequest(
+public record CreateSavingEntryRequest(
+    string Month,
     decimal Amount
 );

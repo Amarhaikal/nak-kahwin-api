@@ -12,8 +12,8 @@ using nak_kahwin_api.Data;
 namespace nak_kahwin_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260625130145_AddSavingsTracker")]
-    partial class AddSavingsTracker
+    [Migration("20260627102151_AddSavingEntries")]
+    partial class AddSavingEntries
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -170,7 +170,7 @@ namespace nak_kahwin_api.Migrations
                     b.ToTable("RefreshTokens");
                 });
 
-            modelBuilder.Entity("nak_kahwin_api.Models.SavingsContribution", b =>
+            modelBuilder.Entity("nak_kahwin_api.Models.SavingEntry", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -178,56 +178,28 @@ namespace nak_kahwin_api.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric");
 
-                    b.Property<DateTime>("ContributedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ContributorId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("GoalId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ContributorId");
-
-                    b.HasIndex("GoalId");
-
-                    b.ToTable("SavingsContributions");
-                });
-
-            modelBuilder.Entity("nak_kahwin_api.Models.SavingsGoal", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("CurrentAmount")
-                        .HasColumnType("numeric");
 
                     b.Property<string>("EventId")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<decimal>("TargetAmount")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("Title")
+                    b.Property<string>("Month")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.HasIndex("EventId");
 
-                    b.ToTable("SavingsGoals");
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SavingEntries");
                 });
 
             modelBuilder.Entity("nak_kahwin_api.Models.User", b =>
@@ -313,26 +285,7 @@ namespace nak_kahwin_api.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("nak_kahwin_api.Models.SavingsContribution", b =>
-                {
-                    b.HasOne("nak_kahwin_api.Models.User", "Contributor")
-                        .WithMany()
-                        .HasForeignKey("ContributorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("nak_kahwin_api.Models.SavingsGoal", "SavingsGoal")
-                        .WithMany("Contributions")
-                        .HasForeignKey("GoalId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Contributor");
-
-                    b.Navigation("SavingsGoal");
-                });
-
-            modelBuilder.Entity("nak_kahwin_api.Models.SavingsGoal", b =>
+            modelBuilder.Entity("nak_kahwin_api.Models.SavingEntry", b =>
                 {
                     b.HasOne("nak_kahwin_api.Models.Event", "Event")
                         .WithMany()
@@ -340,17 +293,20 @@ namespace nak_kahwin_api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("nak_kahwin_api.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Event");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("nak_kahwin_api.Models.ChecklistGroup", b =>
                 {
                     b.Navigation("Items");
-                });
-
-            modelBuilder.Entity("nak_kahwin_api.Models.SavingsGoal", b =>
-                {
-                    b.Navigation("Contributions");
                 });
 #pragma warning restore 612, 618
         }
