@@ -12,5 +12,6 @@ public class SavingEntry
     public virtual User User { get; set; } = default!;
     public string Month { get; set; } = string.Empty; // e.g., "Jun 2026"
     public decimal Amount { get; set; }
+    public int Position { get; set; } = 0;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

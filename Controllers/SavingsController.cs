@@ -12,7 +12,7 @@ namespace nak_kahwin_api.Controllers;
 public class SavingsController(ISavingsService savingsService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetSavings()
+    public async Task<IActionResult> GetSavings([FromQuery] string? filter = null, [FromQuery] int? limit = null)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
@@ -20,7 +20,7 @@ public class SavingsController(ISavingsService savingsService) : ControllerBase
             return Unauthorized(new { message = "User not logged in or invalid token." });
         }
 
-        var result = await savingsService.GetSavingsAsync(userId);
+        var result = await savingsService.GetSavingsAsync(userId, filter, limit);
         return Ok(result);
     }
 
@@ -68,5 +68,23 @@ public class SavingsController(ISavingsService savingsService) : ControllerBase
         }
 
         return Ok(new { message = "Savings entry deleted successfully." });
+    }
+
+    [HttpPut("reorder")]
+    public async Task<IActionResult> ReorderSavings([FromBody] List<string> orderedIds)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized(new { message = "User not logged in or invalid token." });
+        }
+
+        var success = await savingsService.ReorderSavingsAsync(userId, orderedIds);
+        if (!success)
+        {
+            return BadRequest(new { message = "Failed to update savings order." });
+        }
+
+        return Ok(new { message = "Savings records reordered successfully." });
     }
 }

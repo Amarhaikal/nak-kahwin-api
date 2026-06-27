@@ -13,16 +13,33 @@ public class SavingsService(AppDbContext db) : ISavingsService
             .FirstOrDefaultAsync(e => e.OwnerId == userId || e.PartnerId == userId);
     }
 
-    public async Task<List<SavingEntryResponse>> GetSavingsAsync(string userId)
+    public async Task<List<SavingEntryResponse>> GetSavingsAsync(string userId, string? filter = null, int? limit = null)
     {
         var ev = await GetUserEventAsync(userId);
         if (ev is null) return [];
 
-        var entries = await db.SavingEntries
+        var query = db.SavingEntries
             .Include(se => se.User)
-            .Where(se => se.EventId == ev.Id)
-            .OrderByDescending(se => se.CreatedAt)
-            .ToListAsync();
+            .Where(se => se.EventId == ev.Id);
+
+        var normalizedFilter = filter?.ToLower()?.Trim();
+        if (normalizedFilter == "groom")
+        {
+            query = query.Where(se => se.User.Role == "groom");
+        }
+        else if (normalizedFilter == "bride")
+        {
+            query = query.Where(se => se.User.Role == "bride");
+        }
+
+        query = query.OrderBy(se => se.Position).ThenByDescending(se => se.CreatedAt);
+
+        if (limit.HasValue && limit.Value > 0)
+        {
+            query = query.Take(limit.Value);
+        }
+
+        var entries = await query.ToListAsync();
 
         return entries.Select(se => new SavingEntryResponse(
             Id: se.Id,
@@ -32,6 +49,7 @@ public class SavingsService(AppDbContext db) : ISavingsService
             ContributorRole: se.User.Role,
             Month: se.Month,
             Amount: se.Amount,
+            Position: se.Position,
             CreatedAt: se.CreatedAt
         )).ToList();
     }
@@ -44,12 +62,17 @@ public class SavingsService(AppDbContext db) : ISavingsService
         var user = await db.Users.FindAsync(userId);
         if (user is null) return null;
 
+        var maxPosition = await db.SavingEntries
+            .Where(se => se.EventId == ev.Id)
+            .MaxAsync(se => (int?)se.Position) ?? -1;
+
         var entry = new SavingEntry
         {
             EventId = ev.Id,
             UserId = userId,
             Month = req.Month,
             Amount = req.Amount,
+            Position = maxPosition + 1,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -64,6 +87,7 @@ public class SavingsService(AppDbContext db) : ISavingsService
             ContributorRole: user.Role,
             Month: entry.Month,
             Amount: entry.Amount,
+            Position: entry.Position,
             CreatedAt: entry.CreatedAt
         );
     }
@@ -79,6 +103,28 @@ public class SavingsService(AppDbContext db) : ISavingsService
         db.SavingEntries.Remove(entry);
         await db.SaveChangesAsync();
 
+        return true;
+    }
+
+    public async Task<bool> ReorderSavingsAsync(string userId, List<string> orderedIds)
+    {
+        var ev = await GetUserEventAsync(userId);
+        if (ev is null) return false;
+
+        var entries = await db.SavingEntries
+            .Where(se => se.EventId == ev.Id)
+            .ToListAsync();
+
+        for (int i = 0; i < orderedIds.Count; i++)
+        {
+            var entry = entries.FirstOrDefault(e => e.Id == orderedIds[i]);
+            if (entry != null)
+            {
+                entry.Position = i; // Save new list order positions
+            }
+        }
+
+        await db.SaveChangesAsync();
         return true;
     }
 }

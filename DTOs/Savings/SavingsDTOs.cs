@@ -8,6 +8,7 @@ public record SavingEntryResponse(
     string ContributorRole, // "groom" | "bride"
     string Month,
     decimal Amount,
+    int Position,
     DateTime CreatedAt
 );
 
