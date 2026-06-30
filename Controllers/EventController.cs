@@ -107,4 +107,50 @@ public class EventController(IEventService eventService) : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpPost("{id}/partner")]
+    public async Task<IActionResult> InvitePartner(string id, [FromBody] InvitePartnerRequest req)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized(new { message = "User not logged in or invalid token." });
+        }
+
+        var baseSchemeAndHost = $"{Request.Scheme}://{Request.Host}";
+        var (response, errorMessage) = await eventService.InvitePartnerAsync(id, userId, req.PartnerEmail, baseSchemeAndHost);
+
+        if (response is not null) return Ok(response);
+
+        return errorMessage switch
+        {
+            "Event not found." => NotFound(new { message = errorMessage }),
+            "Only the event owner can invite a partner." => StatusCode(403, new { message = errorMessage }),
+            "No user found with that email." => NotFound(new { message = errorMessage }),
+            "You cannot invite yourself as a partner." => BadRequest(new { message = errorMessage }),
+            "This user is already your partner on this event." => Conflict(new { message = errorMessage }),
+            _ when errorMessage?.StartsWith("A ") == true => BadRequest(new { message = errorMessage }),
+            _ => BadRequest(new { message = errorMessage ?? "Failed to invite partner." })
+        };
+    }
+
+    [HttpDelete("{id}/partner")]
+    public async Task<IActionResult> RemovePartner(string id)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized(new { message = "User not logged in or invalid token." });
+        }
+
+        var baseSchemeAndHost = $"{Request.Scheme}://{Request.Host}";
+        var result = await eventService.RemovePartnerAsync(id, userId, baseSchemeAndHost);
+
+        if (result is null)
+        {
+            return StatusCode(403, new { message = "Event not found or you are not the owner." });
+        }
+
+        return Ok(result);
+    }
 }

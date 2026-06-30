@@ -29,9 +29,11 @@ public class EventService(AppDbContext db, IChecklistService checklistService) :
 
         return new EventDetailsResponse(
             Id: ev.Id,
+            OwnerId: ev.OwnerId,
             Title: ev.Title,
             IsEngagementEnabled: ev.IsEngagementEnabled,
             OwnerName: owner.Name,
+            PartnerId: null,
             PartnerName: null,
             MarriageVenue: ev.MarriageVenue,
             MarriageDate: ev.MarriageDate,
@@ -160,6 +162,74 @@ public class EventService(AppDbContext db, IChecklistService checklistService) :
         return MapToResponse(ev, ev.Owner.Name, ev.Partner?.Name, baseSchemeAndHost);
     }
 
+    public async Task<(EventDetailsResponse? Response, string? ErrorMessage)> InvitePartnerAsync(
+        string eventId, string ownerUserId, string partnerEmail, string baseSchemeAndHost)
+    {
+        var ev = await db.Events
+            .Include(e => e.Owner)
+            .Include(e => e.Partner)
+            .FirstOrDefaultAsync(e => e.Id == eventId);
+
+        if (ev is null)
+            return (null, "Event not found.");
+
+        if (ev.OwnerId != ownerUserId)
+            return (null, "Only the event owner can invite a partner.");
+
+        var partner = await db.Users.FirstOrDefaultAsync(u => u.Email == partnerEmail);
+        if (partner is null)
+            return (null, "No user found with that email.");
+
+        if (partner.Id == ownerUserId)
+            return (null, "You cannot invite yourself as a partner.");
+
+        // Role validation: opposite roles only
+        var ownerRole = ev.Owner.Role.ToLower();
+        var partnerRole = partner.Role.ToLower();
+        var isOppositeRole = (ownerRole == "groom" && partnerRole == "bride")
+                          || (ownerRole == "bride" && partnerRole == "groom");
+        if (!isOppositeRole)
+            return (null, $"A {ownerRole} can only invite a {(ownerRole == "groom" ? "bride" : "groom")} as a partner.");
+
+        if (ev.PartnerId == partner.Id)
+            return (null, "This user is already your partner on this event.");
+
+        // Clear the partner's existing link on any other event (as partner only)
+        var oldEvent = await db.Events
+            .FirstOrDefaultAsync(e => e.PartnerId == partner.Id && e.Id != eventId);
+        if (oldEvent is not null)
+        {
+            oldEvent.PartnerId = null;
+            oldEvent.UpdatedAt = DateTime.UtcNow;
+        }
+
+        ev.PartnerId = partner.Id;
+        ev.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        // Reload partner nav property after save
+        ev.Partner = partner;
+        return (MapToResponse(ev, ev.Owner.Name, partner.Name, baseSchemeAndHost), null);
+    }
+
+    public async Task<EventDetailsResponse?> RemovePartnerAsync(string eventId, string ownerUserId, string baseSchemeAndHost)
+    {
+        var ev = await db.Events
+            .Include(e => e.Owner)
+            .Include(e => e.Partner)
+            .FirstOrDefaultAsync(e => e.Id == eventId);
+
+        if (ev is null) return null;
+        if (ev.OwnerId != ownerUserId) return null;
+
+        ev.PartnerId = null;
+        ev.Partner = null;
+        ev.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        return MapToResponse(ev, ev.Owner.Name, null, baseSchemeAndHost);
+    }
+
     private static EventDetailsResponse MapToResponse(Event ev, string ownerName, string? partnerName, string baseSchemeAndHost)
     {
         var marriageUrl = string.IsNullOrEmpty(ev.MarriageImageUrl) 
@@ -172,9 +242,11 @@ public class EventService(AppDbContext db, IChecklistService checklistService) :
 
         return new EventDetailsResponse(
             Id: ev.Id,
+            OwnerId: ev.OwnerId,
             Title: ev.Title,
             IsEngagementEnabled: ev.IsEngagementEnabled,
             OwnerName: ownerName,
+            PartnerId: ev.PartnerId,
             PartnerName: partnerName,
             MarriageVenue: ev.MarriageVenue,
             MarriageDate: ev.MarriageDate,
